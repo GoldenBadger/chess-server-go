@@ -15,7 +15,7 @@ type Move struct {
 	Result   string
 }
 
-type Pool struct {
+type pool struct {
 	wait         sync.WaitGroup
 	lock         sync.Mutex
 	numProcesses int
@@ -24,9 +24,9 @@ type Pool struct {
 	Output       map[int]Move // Maps Move ID to Move.
 }
 
-func NewPool(filename string, num int) *Pool {
+func NewPool(filename string, num int) *pool {
 	log.Printf("INFO: Starting pool with %d processes.", num)
-	p := &Pool{
+	p := &pool{
 		numProcesses: num,
 		done:         make(chan bool, num),
 		Input:        make(chan Move, 256),
@@ -39,7 +39,7 @@ func NewPool(filename string, num int) *Pool {
 	return p
 }
 
-func (p *Pool) Stop() {
+func (p *pool) Stop() {
 	log.Printf("INFO: Stopping pool.")
 	for i := 0; i < p.numProcesses; i++ {
 		p.done <- true
@@ -48,7 +48,7 @@ func (p *Pool) Stop() {
 	log.Printf("INFO: Pool stopped.")
 }
 
-func (p *Pool) runEngine(filename string) {
+func (p *pool) runEngine(filename string) {
 	engine := exec.Command(filename)
 	engine.Start()
 	go p.engineJob(engine)
@@ -56,7 +56,7 @@ func (p *Pool) runEngine(filename string) {
 	p.wait.Done()
 }
 
-func (p *Pool) engineJob(engine *exec.Cmd) {
+func (p *pool) engineJob(engine *exec.Cmd) {
 	in, err := engine.StdinPipe()
 	inWriter := bufio.NewWriter(in)
 	if err != nil {
